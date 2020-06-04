@@ -5,32 +5,32 @@ Description: "EMR with Hail and VEP (qs-1qp776mgo)"
 Parameters:
 
   pAmi:
-    Description: "(Optional) Custom AMI, specific version from the public AMI list, or empty value.  If empty, the latest public Hail with VEP AMI will be used."
+    Description: "(Optional) Hail AMI ID. Check the github repo for public AMI IDs. Build your own AMI through the Hail Quick Start's Code Build mechanism. Or leave it blank to use the latest public Hail AMI with VEP."
     Type: "String"
 
   pAllowSsmShell:
     AllowedValues:
       - "false"
       - "true"
-    Default: "false"
-    Description: "Must also be set to true on SageMaker CloudFormation stacks."
+    Default: "true"
+    Description: "Allow shell access to nodes in the EMR cluster through Amazon SSM. Must also be set to true when launching Hail SageMaker JupyterLab stacks."
     Type: "String"
 
   pClusterName:
     AllowedPattern: "^[0-9a-zA-Z-/]*$"
-    Description: ""
+    Description: "Name to use for tagging resources"
     MinLength: 3
     Type: "String"
 
   pEmrCoreInstanceCount:
     Default: 1
-    Description: "Must be 1 or greater."
+    Description: "Enter the number of EMR core nodes. Minimum is 1. "
     MinValue: 1 # Cannot be 0.
     Type: "Number"
 
   pEmrCoreInstanceDataVolSize:
     Default: "100"
-    Description: "GB. Secondary GP2 data volume for CORE nodes. Available on /mnt."
+    Description: "Allocated storage of EBS GP2 data volumes for core nodes (in GB)."
     MaxValue: "2000"
     MinValue: "20"
     Type: "Number"
@@ -121,12 +121,12 @@ Parameters:
       - "r5d.12xlarge"
       - "r5d.24xlarge"
     Default: "r5.xlarge"
-    Description: ""
+    Description: "Core node instance sizes."
     Type: "String"
 
   pEmrInstanceRootVolSize:
     Default: "100"
-    Description: "Root volume size in GB for all cluster instances."
+    Description: "Allocated storage for EBS root volumes for all cluster instances (in GB)."
     MaxValue: "100"
     MinValue: "10"
     Type: "Number"
@@ -226,15 +226,16 @@ Parameters:
       - "r5d.24xlarge"
     Default: "m5.xlarge"
     Type: "String"
+    Description: "Master node instance size."
 
   pEmrMinTaskNodeCount:
     Default: 1
-    Description: "Value of 0 disables task nodes and auto scaling."
+    Description: "Minimum number of EMR task nodes. Changing this to 0 disables task nodes and auto scaling."
     Type: "Number"
 
   pEmrMaxTaskNodeCount:
     Default: 1
-    Description: "Must be equal to or greater than minimum."
+    Description: "Maximum number of EMR task nodes. Must be equal to or greater than minimum. (Minimum is 1, Maximum is 2)"
     MaxValue: 50
     Type: "Number"
 
@@ -324,33 +325,33 @@ Parameters:
       - "r5d.12xlarge"
       - "r5d.24xlarge"
     Default: "r5.xlarge"
-    Description: ""
+    Description: "Task node instance sizes."
     Type: "String"
 
   pEmrReleaseLabel:
     AllowedValues:
       - "emr-5.29.0"
     Default: "emr-5.29.0"
-    Description: ""
+    Description: "Only one version of EMR is currently supported."
     Type: "String"
 
   pKmsEbsArn:
-    Description: "(Optional) If the source AMI is encrypted specify the full key ARN.  Otherwise, leave blank.  This does NOT automatically enable EBS encryption."
+    Description: "(Optional) If the source AMI is encrypted, specify the full key ARN."
     Default: ""
     Type: "String"
 
   pLivyAccessSecurityGroup:
-    Description: "This parameter is set by the hail-core stack. No changes should be necessary.  Security Group ID that will be allowed access to the master node on port 8998."
+    Description: "This parameter is pulled from AWS Parameter Store. No changes should be necessary. Security Group ID that will be allowed access to the master node on port 8998."
     Default: "/hail/sagemaker/security-group-id"
     Type: "AWS::SSM::Parameter::Value<String>"
 
   pHailBucket:
-    Description: "This parameter is set by the S3 stack.  No changes should be necessary.  Cluster Manifests will be put here on cluster launch under /manifests."
+    Description: "This parameter is pulled from AWS Parameter Store. No changes should be necessary. Cluster Manifests will be put here on cluster launch under /manifests."
     Default: "/hail/s3/hail"
     Type: "AWS::SSM::Parameter::Value<String>"
 
   pSubnetId:
-    Description: "This parameter is set by the hail-core stack. No changes should be necessary.  Nodes will be deployed in this subnet."
+    Description: "This parameter is pulled from AWS Parameter Store. No changes should be necessary. Nodes will be deployed in this subnet."
     Default: "/hail/vpc/subnet-id"
     Type: "AWS::SSM::Parameter::Value<String>"
 
@@ -360,12 +361,12 @@ Parameters:
       - "staging"
       - "development"
     Default: "development"
-    Description: "Environment type for default resource tagging."
+    Description: "Environment tag to associate with EMR resources."
     Type: "String"
 
   pTagOwner:
     Default: ""
-    Description: "(Optional) - Owner of the resources.  Person/Department, etc."
+    Description: "(Optional) Owner tag to associate with resources. Person/Department, etc."
     Type: "String"
 
   pTaskNodeMarket:
@@ -373,11 +374,11 @@ Parameters:
       - "ON_DEMAND"
       - "SPOT"
     Default: "ON_DEMAND"
-    Description: "Spot instances are used with a max bid of the on demand price."
+    Description: "Choosing 'SPOT' will launch task nodes using spot instances."
     Type: "String"
 
   pVpcId:
-    Description: "This parameter is set by the hail-core stack. No changes should be necessary."
+    Description: "This parameter is pulled from AWS Parameter Store. No changes should be necessary. The ID of the VPC to deploy EMR clusters in."
     Default: "/hail/vpc/id"
     Type: "AWS::SSM::Parameter::Value<String>"
 
@@ -386,34 +387,33 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: "Network Details"
+          default: "Network details"
         Parameters:
           - "pVpcId"
           - "pSubnetId"
           - "pLivyAccessSecurityGroup"
       - Label:
-          default: "Cluster Primary Settings"
+          default: "Cluster primary settings"
         Parameters:
           - "pClusterName"
           - "pAmi"
-          - "pEmrReleaseLabel"
           - "pEmrInstanceRootVolSize"
-          - "pKmsEbsArn"
-          - "pHailBucket"
           - "pEmrInstanceTerminationProtection"
+          - "pEmrReleaseLabel"
+          - "pKmsEbsArn"
           - "pAllowSsmShell"
       - Label:
-          default: "Master Instance Settings"
+          default: "EMR master node instance settings"
         Parameters:
           - "pEmrMasterInstanceSize"
       - Label:
-          default: "Core Instance Settings"
+          default: "Core instance settings"
         Parameters:
           - "pEmrCoreInstanceCount"
           - "pEmrCoreInstanceSize"
           - "pEmrCoreInstanceDataVolSize"
       - Label:
-          default: "Auto Scaling Task Node Settings"
+          default: "Auto scaling task node settings"
         Parameters:
           - "pTaskNodeMarket"
           - "pEmrMinTaskNodeCount"
@@ -426,39 +426,39 @@ Metadata:
           - "pTagOwner"
     ParameterLabels:
       pAllowSsmShell:
-        default: "Allow SSM Shell Access from SageMaker Notebook Instances"
+        default: "Allow SSM shell access from SageMaker notebook instances"
       pAmi:
-        default: "Hail AMI"
+        default: "Hail AMI ID"
       pClusterName:
-        default: "Cluster Name"
+        default: "EMR cluster name"
       pEmrCoreInstanceCount:
-        default: "Number of Core Nodes"
+        default: "Number of EMR core nodes"
       pEmrCoreInstanceDataVolSize:
-        default: "Scratch Volume Size"
+        default: "Scratch volume size for EMR core nodes"
       pEmrCoreInstanceSize:
-        default: "Core Instance Size"
+        default: "Core node instance size"
       pEmrInstanceRootVolSize:
-        default: "Root Volume Size"
+        default: "EMR node root volume size"
       pEmrInstanceTerminationProtection:
-        default: "Instance Termination Protection"
+        default: "Enable EMR instance termination protection"
       pEmrMasterInstanceSize:
-        default: "Master Node Size"
+        default: "Master node instance size"
       pEmrReleaseLabel:
-        default: "EMR Release"
+        default: "EMR release"
       pEmrMinTaskNodeCount:
-        default: "Minimum number of Task Nodes"
+        default: "Minimum number of EMR task nodes"
       pEmrMaxTaskNodeCount:
-        default: "Maximum number of Task Nodes"
+        default: "Maximum number of EMR task nodes"
       pEmrTaskNodeSize:
-        default: "Task Node Size"
+        default: "Task node instance size"
       pKmsEbsArn:
-        default: "EBS KMS Key ARN"
+        default: "EBS KMS key ARN"
       pLivyAccessSecurityGroup:
-        default: "Livy Access Security Group"
+        default: "Livy access security group ID"
       pHailBucket:
-        default: "SSM Parameter for Hail Bucket"
+        default: "S3 bucket name with Hail artifiacts"
       pSubnetId:
-        default: "Subnet ID"
+        default: "Target subnet ID for EMR cluster"
       pTagEnvironment:
         default: "Environment Tag"
       pTagOwner:

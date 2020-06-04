@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "AWS Hail Quickstart (qs-1qp776mh2)"
+Description: "AWS Hail Quick Start (qs-1qp776mh2)"
 
 Parameters:
 
@@ -7,7 +7,7 @@ Parameters:
     AllowedPattern: "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$"
     ConstraintDescription: "Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-)."
     Default: "aws-quickstart"
-    Description: "S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-)."
+    Description: "The name of the Amazon S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-)."
     Type: "String"
 
   QSS3KeyPrefix:
@@ -18,18 +18,18 @@ Parameters:
     Type: "String"
 
   pKmsEbsArn:
-    Description: "Optional - If region level EBS encryption is enabled specify the full key ARN.  Otherwise, leave blank.  This does NOT automatically encrypt your AMI."
+    Description: "(Optional) If region level EBS encryption is enabled specify the full key ARN."
     Default: ""
     Type: "String"
 
   pHailBucket:
     AllowedPattern: "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$"
-    Description: "EMR logs, cluster manifests, and VEP configuration files are placed here."
+    Description: "Ignored if auto creating the Hail bucket. Name of the Amazon S3 bucket where EMR logs, cluster manifests, and VEP configuration files are placed."
     Type: "String"
 
   pCreateHailBucket:
     Type: "String"
-    Description: "Select No to use an existing bucket."
+    Description: "Choose no to use an existing bucket."
     AllowedValues:
       - "yes"
       - "no"
@@ -37,12 +37,12 @@ Parameters:
 
   pSageMakerBucket:
     AllowedPattern: "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$"
-    Description: "Bucket for common notebooks and SageMaker home directory backups."
+    Description: "Ignored if auto creating the SageMaker bucket. The name of the Amazon S3 bucket for common notebooks and SageMaker home directory backups."
     Type: "String"
 
   pCreateSageMakerBucket:
     Type: "String"
-    Description: "Select No to use an existing bucket."
+    Description: "Choose no to use an existing bucket."
     AllowedValues:
       - "yes"
       - "no"
@@ -54,17 +54,17 @@ Parameters:
       - "staging"
       - "development"
     Default: "development"
-    Description: "Environment type for default resource tagging."
+    Description: "Environment tag to associate with resources."
     Type: "String"
 
   pTagOwner:
     Type: "String"
-    Description: "Optional - Owner of the resources.  Person/Department, etc."
+    Description: "(Optional) Owner tag to associate with resources. Person/Department, etc."
     Default: ""
 
   pTargetVpc:
     Type: "String"
-    Description: "New will create AWS Quickstart VPC.  For existing VPCs, set the remaining network settings parameters."
+    Description: "Choosing new will create a new VPC."
     AllowedValues:
       - "new"
       - "existing"
@@ -77,17 +77,17 @@ Parameters:
     Default: "10.0.0.0/16"
 
   pVpcId:
-    Description: "Required for existing VPC target."
+    Description: "Required if using existing VPC. Ignored if creating a new VPC."
     Type: "String"
     Default: ""
 
   pSubnetId:
-    Description: "Required for existing VPC target. Subnet for EMR Cluster and SageMaker Notebook Instances.  Must reside in the existing VPC."
+    Description: "Required if using existing VPC. Ignored if creating a new VPC. Target subnet for EMR Cluster and SageMaker Notebook instances."
     Type: "String"
     Default: ""
 
   pSubnetType:
-    Description: "Required for existing VPC target. Public subnets deploy resources with public IPs.  Private subnets do not.  Private subnets are recommended."
+    Description: "Choosing public will launch EMR resources with public IP addresses."
     Type: "String"
     AllowedValues:
       - "public"
@@ -99,12 +99,7 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: "AWS Quick Start Configuration"
-        Parameters:
-         - "QSS3BucketName"
-         - "QSS3KeyPrefix"
-      - Label:
-          default: "Network Settings"
+          default: "Network settings"
         Parameters:
           - "pTargetVpc"
           - "pNewVpcCidr"
@@ -112,47 +107,52 @@ Metadata:
           - "pSubnetId"
           - "pSubnetType"
       - Label:
-          default: "Hail Settings"
+          default: "Hail settings"
         Parameters:
-          - "pHailBucket"
-          - "pCreateHailBucket"
-          - "pSageMakerBucket"
           - "pCreateSageMakerBucket"
+          - "pCreateHailBucket"
+          - "pHailBucket"
+          - "pSageMakerBucket"
           - "pKmsEbsArn"
       - Label:
           default: "Tagging"
         Parameters:
           - "pTagEnvironment"
           - "pTagOwner"
+      - Label:
+          default: "AWS Quick Start configuration"
+        Parameters:
+         - "QSS3BucketName"
+         - "QSS3KeyPrefix"
     ParameterLabels:
       QSS3BucketName:
         default: Quick Start S3 bucket name
       QSS3KeyPrefix:
         default: Quick Start S3 key prefix
       pKmsEbsArn:
-        default: "EBS KMS Key ARN"
+        default: "KMS Key ARN for EBS volume encryption"
       pHailBucket:
-        default: "Hail Bucket Name"
+        default: "Amazon S3 bucket name for Hail artifacts"
       pCreateHailBucket:
-        default: "Create Hail Bucket"
+        default: "Auto create Hail bucket"
       pSageMakerBucket:
-        default: "Sagemaker Home Directory Bucket Name"
+        default: "Amazon S3 bucket name for SageMaker backup"
       pCreateSageMakerBucket:
-        default: "Create SageMaker Bucket"
+        default: "Auto create backup bucket for SageMaker"
       pTagOwner:
-        default: "Owner Tag"
+        default: "Owner tag"
       pTagEnvironment:
-        default: "Environment Tag"
+        default: "Environment tag"
       pTargetVpc:
         default: "Target VPC"
       pNewVpcCidr:
-        default: "New VPC CIDR"
+        default: "CIDR range for new VPC"
       pVpcId:
-        default: "Existing VPC ID"
+        default: "VPC ID for existing VPC"
       pSubnetId:
-        default: "Existing Subnet ID"
+        default: "Subnet ID for existing VPC"
       pSubnetType:
-        default: "Existing Subnet Type"
+        default: "Subnet type"
 
 Conditions:
 

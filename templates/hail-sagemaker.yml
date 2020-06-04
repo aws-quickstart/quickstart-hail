@@ -8,7 +8,7 @@ Parameters:
       - "false"
       - "true"
     Default: "false"
-    Description: "Must also be set to true on EMR CloudFormation stacks."
+    Description: "Set to 'true' to allow the notebook to start SSH sessions on the EMR cluster via Amazon SSM Session Manager. Must also be set to true on EMR CloudFormation stacks."
     Type: "String"
 
   pInstanceType:
@@ -22,31 +22,31 @@ Parameters:
       - "ml.t3.xlarge"
       - "ml.t3.2large"
     Default: "ml.t3.medium"
-    Description: ""
+    Description: "Notebook instance size."
     Type: "String"
 
   pName:
     AllowedPattern: "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$"
-    Description: "Used as the name of the notebook instance and S3 backup location.  Username is recommend - E.g. jsmith"
+    Description: "This name is used for tagging the notebook. Its also used as the prefix in S3 where the notebook's home directory is backed up. Username is recommend - E.g. jsmith"
     Type: "String"
 
   pSageMakerBucket:
-    Description: "This parameter is set by the S3 stack.  No changes should be necessary.  S3 bucket with scripts, common notebooks, and home directory backups."
+    Description: "This parameter is set by the S3 stack.This parameter is pulled from AWS Parameter Store.  No changes should be necessary. S3 bucket with scripts, common notebooks, and home directory backups."
     Type: "AWS::SSM::Parameter::Value<String>"
     Default: "/hail/s3/sagemaker"
 
   pHailBucket:
-    Description: "This parameter is set by the S3 stack.  No changes should be necessary.  Notebook instance will have full read."
+    Description: "This parameter is pulled from AWS Parameter Store. No changes should be necessary. Notebook instance will have full read. S3 bucket name where Hail assets are stored."
     Type: "AWS::SSM::Parameter::Value<String>"
     Default: "/hail/s3/hail"
 
   pSubnetId:
-    Description: "This parameter is set by the hail-core stack. No changes should be necessary."
+    Description: "This parameter is pulled from AWS Parameter Store. No changes should be necessary."
     Default: "/hail/vpc/subnet-id"
     Type: "AWS::SSM::Parameter::Value<String>"
 
   pSubnetType:
-    Description: "This parameter is set by the hail-core stack. No changes should be necessary."
+    Description: "This parameter is pulled from AWS Parameter Store. No changes should be necessary. Choosing public will launch the notebook with a public IP address."
     Default: "/hail/vpc/subnet-type"
     Type: "AWS::SSM::Parameter::Value<String>"
 
@@ -56,23 +56,23 @@ Parameters:
       - "staging"
       - "development"
     Default: "development"
-    Description: "Environment type for default resource tagging."
+    Description: "Environment tag to associate with Amazon SageMaker notebook."
     Type: "String"
 
   pTagOwner:
     Default: ""
-    Description: "(Optional) Owner of the resources.  Person/Department, etc."
+    Description: "(Optional) Owner tag to associate with notebook. Person/Department, etc."
     Type: "String"
 
   pVolumeSize:
     Default: "20"
-    Description: "Size (GB)."
+    Description: "Allocated EBS capacity for the  notebook's root volume (in GB)."
     MaxValue: "500"
     MinValue: "5"
     Type: "Number"
 
   pSgSagemaker:
-    Description: "This parameter is set by the hail-core stack.  No changes should be necessary.  This security group ID will be attached to the notebook instance."
+    Description: "This parameter is pulled from AWS Parameter Store. No changes should be necessary. This security group ID will be attached to the notebook instance."
     Type: "AWS::SSM::Parameter::Value<String>"
     Default: "/hail/sagemaker/security-group-id"
 
@@ -82,20 +82,20 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: "Network Details"
+          default: "Network details"
         Parameters:
           - "pSubnetId"
           - "pSubnetType"
           - "pSgSagemaker"
       - Label:
-          default: "Instance Details"
+          default: "Notebook details"
         Parameters:
           - "pName"
           - "pInstanceType"
           - "pVolumeSize"
           - "pAllowSsmShell"
       - Label:
-          default: "S3 Resources"
+          default: "S3 resources"
         Parameters:
           - "pHailBucket"
           - "pSageMakerBucket"
@@ -106,23 +106,23 @@ Metadata:
           - "pTagOwner"
     ParameterLabels:
       pAllowSsmShell:
-        default: "Allow SSM Shell Access to EMR Nodes"
+        default: "Allow shell access to EMR Nodes via Amazon SSM Session Manager"
       pSubnetId:
-        default: "SSM Parameter for Subnet ID"
+        default: "Notebook subnet ID"
       pSubnetType:
-        default: "SSM Parameter for Subnet Type"
+        default: "Notebook subnet type"
       pName:
-        default: "Instance Name"
+        default: "Notebook name"
       pInstanceType:
-        default: "Instance Type"
+        default: "Notebook instance size"
       pVolumeSize:
-        default: "Volume Size"
+        default: "Notebook root volume size"
       pHailBucket:
-        default: "SSM Parameter for Hail Bucket"
+        default: "Hail bucket"
       pSageMakerBucket:
-        default: "SSM Parameter for SageMaker Bucket"
+        default: "Amazon SageMaker backup bucket"
       pSgSagemaker:
-        default: "SSM Parameter for SageMaker Security Group ID"
+        default: "Amazon SageMaker security group ID"
       pTagOwner:
         default: "Owner"
       pTagEnvironment:
